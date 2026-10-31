@@ -19,6 +19,7 @@ import {
   type SetStateAction,
 } from 'react';
 import { canReachWorkspaceBillingEntrance, type AmrWalletSnapshot } from '@open-design/contracts';
+import { isOllamaCloudBaseUrl } from '../utils/byokProvider';
 import { VisuallyHidden } from '@open-design/components';
 import { useT } from '../i18n';
 import {
@@ -1032,10 +1033,11 @@ export function InlineModelSwitcher({
   // serves both surfaces and replaces any stale slot.
   useEffect(() => {
     if (!open || config.mode !== 'api' || !onProviderModelsCacheChange) return;
-    if (apiProtocol === 'azure' || apiProtocol === 'ollama') return;
+    if (apiProtocol === 'azure') return;
     if (apiProtocol !== 'aihubmix' && !config.apiKey.trim()) return;
     const baseUrl = config.baseUrl.trim();
     if (!/^https?:\/\//i.test(baseUrl)) return;
+    if (apiProtocol === 'ollama' && !isOllamaCloudBaseUrl(baseUrl)) return;
     const key = providerModelsKey;
     if (fetchedApiModelOptions.length) return;
     if (providerModelsFetchingRef.current.has(key)) return;

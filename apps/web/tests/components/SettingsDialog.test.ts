@@ -594,7 +594,7 @@ describe('SettingsDialog provider model fetch helpers', () => {
         { apiKey: 'ollama-key', baseUrl: 'https://ollama.com' },
         'ollama',
       ),
-    ).toBe(false);
+    ).toBe(true);
     expect(
       canFetchProviderModels(
         {

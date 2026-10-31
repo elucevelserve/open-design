@@ -335,6 +335,21 @@ test('[P1] BYOK Anthropic gateway preset updates fields and persists after reope
 });
 
 test('[P1] BYOK Ollama Cloud exposes refreshed model choices and persists selection', async ({ page }) => {
+  await page.route('**/api/provider/models', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true,
+        kind: 'success',
+        latencyMs: 12,
+        models: [
+          { id: 'gpt-oss:120b', label: 'gpt-oss:120b' },
+          { id: 'kimi-k2.7-code', label: 'kimi-k2.7-code' },
+        ],
+      }),
+    });
+  });
   await openExecutionSettings(page, {
     mode: 'api',
     apiKey: 'ollama-key',
@@ -369,7 +384,7 @@ test('[P1] BYOK Ollama Cloud exposes refreshed model choices and persists select
   const popover = page.getByTestId('settings-byok-model-popover');
   await expect(popover).toBeVisible();
   await page.getByTestId('settings-byok-model-search').fill('kimi-k2.7');
-  await popover.getByRole('option', { name: /^kimi-k2\.7-code$/i }).click();
+  await popover.getByRole('option', { name: /kimi-k2\.7-code/i }).click();
   await expectModelComboboxText(dialog, /kimi-k2\.7-code/i);
   await expect.poll(async () => readSavedConfig(page)).toMatchObject({
     apiProtocol: 'ollama',

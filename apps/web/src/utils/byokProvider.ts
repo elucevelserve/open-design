@@ -11,6 +11,20 @@ export function isLocalOllamaBaseUrl(baseUrl: string): boolean {
   }
 }
 
+/**
+ * Discovery is scoped to the hosted endpoint. The daemon route builds
+ * `/api/tags` for any validated Base URL, so this classification is what keeps
+ * a self-hosted Ollama on its existing notice; local discovery is #6079.
+ */
+export function isOllamaCloudBaseUrl(baseUrl: string): boolean {
+  try {
+    const parsed = new URL(baseUrl);
+    return parsed.protocol === 'https:' && parsed.hostname.toLowerCase() === 'ollama.com';
+  } catch {
+    return false;
+  }
+}
+
 export function byokProviderRequiresApiKey(
   protocol: ApiProtocol,
   provider: KnownProvider | undefined,

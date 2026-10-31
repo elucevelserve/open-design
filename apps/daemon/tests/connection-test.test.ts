@@ -484,8 +484,18 @@ describe('POST /api/provider/models', () => {
     });
   });
 
-  it('lets unsupported contract protocols return a classified provider-models result', async () => {
-    const fetchMock = passThroughOrUpstream(() => jsonResponse({}));
+  it('lists Ollama Cloud models from the native /api/tags catalogue', async () => {
+    const fetchMock = passThroughOrUpstream((url, init) => {
+      expect(url).toBe('https://ollama.com/api/tags');
+      expect(init?.headers).toMatchObject({ authorization: 'Bearer ollama-key' });
+      return jsonResponse({
+        models: [
+          { name: 'glm-5.3', model: 'glm-5.3', size: 0 },
+          { name: 'kimi-k3' },
+          { name: 'kimi-k3' },
+        ],
+      });
+    });
     vi.stubGlobal('fetch', fetchMock);
 
     const res = await realFetch(`${baseUrl}/api/provider/models`, {
@@ -495,6 +505,30 @@ describe('POST /api/provider/models', () => {
         protocol: 'ollama',
         baseUrl: 'https://ollama.com',
         apiKey: 'ollama-key',
+      }),
+    });
+
+    await expect(res.json()).resolves.toMatchObject({
+      ok: true,
+      kind: 'success',
+      models: [
+        { id: 'glm-5.3', label: 'glm-5.3' },
+        { id: 'kimi-k3', label: 'kimi-k3' },
+      ],
+    });
+  });
+
+  it('lets unsupported contract protocols return a classified provider-models result', async () => {
+    const fetchMock = passThroughOrUpstream(() => jsonResponse({}));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const res = await realFetch(`${baseUrl}/api/provider/models`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        protocol: 'azure',
+        baseUrl: 'https://my-azure.openai.azure.com',
+        apiKey: 'azure-key',
       }),
     });
     const body = (await res.json()) as Record<string, unknown>;

@@ -1530,7 +1530,9 @@ describe('SettingsDialog execution settings BYOK interactions', () => {
 
     fireEvent.click(screen.getByRole('tab', { name: 'Ollama Cloud' }));
     expect(screen.queryByRole('button', { name: 'Fetch models' })).toBeNull();
-    expect(screen.getByText('Model discovery is not available for this protocol.')).toBeTruthy();
+    expect(
+      screen.queryByText('Model discovery is not available for this protocol.'),
+    ).toBeNull();
 
     fetchProviderModelsMock.mockClear();
     fireEvent.click(screen.getByRole('tab', { name: 'Xiaomi MiMo' }));

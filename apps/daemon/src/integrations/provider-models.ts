@@ -235,6 +235,25 @@ function extractGoogleModels(data: unknown): ProviderModelOption[] {
   );
 }
 
+// Ollama's native catalogue is `{ models: [{ name, model, ... }] }`. It carries
+// no separate display name, so the id doubles as the label; servers populate
+// both `name` and `model` with the same value.
+function extractOllamaModels(data: unknown): ProviderModelOption[] {
+  const models = (data as { models?: unknown }).models;
+  if (!Array.isArray(models)) return [];
+  return uniqueModels(
+    models
+      .map((item) => {
+        const obj = item && typeof item === 'object'
+          ? item as { name?: unknown; model?: unknown }
+          : null;
+        const id = typeof obj?.name === 'string' ? obj.name : obj?.model;
+        return typeof id === 'string' && id.trim() ? { id, label: id } : null;
+      })
+      .filter((item): item is ProviderModelOption => item != null),
+  );
+}
+
 function providerModelsUrl(protocol: ConnectionTestProtocol, baseUrl: string, apiKey: string): string {
   if (protocol === 'aihubmix') {
     // AIHubMix exposes its chat catalogue on a dedicated endpoint
@@ -251,6 +270,11 @@ function providerModelsUrl(protocol: ConnectionTestProtocol, baseUrl: string, ap
   }
   if (protocol === 'google') {
     return googleProviderModelsUrl(baseUrl, apiKey);
+  }
+  if (protocol === 'ollama') {
+    // Ollama serves its catalogue on the native `/api/tags` route, not the
+    // OpenAI-compatible `/v1/models` one.
+    return new URL('/api/tags', baseUrl).toString();
   }
   throw new Error(`Unsupported protocol: ${protocol}`);
 }
@@ -274,6 +298,9 @@ function providerModelsHeaders(
       'anthropic-version': '2023-06-01',
     };
   }
+  if (protocol === 'ollama') {
+    return { authorization: `Bearer ${apiKey}` };
+  }
   return {};
 }
 
@@ -288,6 +315,7 @@ function extractModels(protocol: ConnectionTestProtocol, data: unknown): Provide
   if (protocol === 'openai' || protocol === 'senseaudio') return extractOpenAiModels(data);
   if (protocol === 'anthropic') return extractAnthropicModels(data);
   if (protocol === 'google') return extractGoogleModels(data);
+  if (protocol === 'ollama') return extractOllamaModels(data);
   return [];
 }
 

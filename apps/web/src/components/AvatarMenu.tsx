@@ -23,6 +23,7 @@ import {
 import { KNOWN_PROVIDERS } from '../state/config';
 import { SUGGESTED_MODELS_BY_PROTOCOL } from '../state/apiProtocols';
 import { fetchProviderModels } from '../providers/provider-models';
+import { isOllamaCloudBaseUrl } from '../utils/byokProvider';
 import {
   canReachWorkspaceBillingEntrance,
   workspaceBillingAuthorityContext,
@@ -473,9 +474,10 @@ export function AvatarMenu({
   useEffect(() => {
     if (!open || config.mode !== 'api') return;
     if (fetchedByokModels.length > 0) return;
-    if (apiProtocol === 'azure' || apiProtocol === 'ollama') return;
+    if (apiProtocol === 'azure') return;
     const baseUrl = config.baseUrl?.trim() ?? '';
     if (!/^https?:\/\//i.test(baseUrl)) return;
+    if (apiProtocol === 'ollama' && !isOllamaCloudBaseUrl(baseUrl)) return;
     // AIHubMix's catalogue is public; every other protocol needs a key.
     if (apiProtocol !== 'aihubmix' && !(config.apiKey ?? '').trim()) return;
     const key = byokModelsKey;

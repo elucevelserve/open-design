@@ -73,6 +73,7 @@ import type {
   TrackingCliProviderId,
 } from '@open-design/contracts/analytics';
 import { agentIdToTracking } from '@open-design/contracts/analytics';
+import { isOllamaCloudBaseUrl } from '../utils/byokProvider';
 import { useI18n, useT } from '../i18n';
 import { navigate, useRoute } from '../router';
 import type {
@@ -2721,7 +2722,7 @@ function OnboardingView({
     Boolean(config.model.trim());
   const canFetchProviderModels =
     apiProtocol !== 'azure' &&
-    apiProtocol !== 'ollama' &&
+    (apiProtocol !== 'ollama' || isOllamaCloudBaseUrl(config.baseUrl)) &&
     Boolean(config.apiKey.trim()) &&
     Boolean(config.baseUrl.trim()) &&
     isLikelyHttpUrl(config.baseUrl);
